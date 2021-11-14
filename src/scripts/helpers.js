@@ -1,4 +1,4 @@
-import { getData, postData } from "./methods.js";
+import { getData, postData, putData, deleteData } from "./methods.js";
 
 const createHTMLTag = ({
   tagName,
@@ -53,6 +53,17 @@ const sendRequest = (url, method, data, resultTag) => {
         console.log(r);
         resultTag.innerText = JSON.stringify(r, null, 2);
       });
+      break;
+    case "put":
+      putData(url, data.value).then((r) => {
+        resultTag.innerText = JSON.stringify(r, null, 2);
+      });
+      break;
+    case "delete":
+      deleteData(url, data.value).then((r) => {
+        resultTag.innerText = JSON.stringify(r, null, 2);
+      });
+      break;
   }
 };
 
