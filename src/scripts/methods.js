@@ -42,3 +42,16 @@ export const deleteData = async (url, body) => {
   }).then((response) => response.json());
   return data;
 };
+
+export const patchData = async (url, body) => {
+  const data = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      mode: "no-cors",
+      "Access-Control-Allow-Origin": "*",
+    },
+    body: body,
+  }).then((response) => response.json());
+  return data;
+};
