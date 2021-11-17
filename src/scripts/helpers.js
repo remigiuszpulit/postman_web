@@ -7,7 +7,7 @@ import {
 } from "./methods.js";
 
 const createHTMLTag = ({
-  tagName,
+  tagName = "div",
   tagID,
   tagClass,
   tagText,
@@ -47,35 +47,78 @@ const createHTMLTag = ({
   return node;
 };
 
+const showResults = (r, resultTag) => {
+  resultTag.innerText = JSON.stringify(r, null, 2);
+};
+
 const sendRequest = (url, method, data, resultTag) => {
   switch (method) {
     case "get":
-      getData(url).then((r) => {
-        resultTag.innerText = JSON.stringify(r, null, 2);
-      });
+      getData(url).then((r) => showResults(r, resultTag));
       break;
     case "post":
-      postData(url, data.value).then((r) => {
-        console.log(r);
-        resultTag.innerText = JSON.stringify(r, null, 2);
-      });
+      postData(url, data).then((r) => showResults(r, resultTag));
       break;
     case "put":
-      putData(url, data.value).then((r) => {
-        resultTag.innerText = JSON.stringify(r, null, 2);
-      });
+      putData(url, data).then((r) => showResults(r, resultTag));
       break;
     case "delete":
-      deleteData(url, data.value).then((r) => {
-        resultTag.innerText = JSON.stringify(r, null, 2);
-      });
+      deleteData(url).then((r) => showResults(r, resultTag));
       break;
+
     case "patch":
-      patchData(url, data.value).then((r) => {
-        resultTag.innerText = JSON.stringify(r, null, 2);
-      });
+      patchData(url, data).then((r) => showResults(r, resultTag));
+
       break;
   }
+};
+
+const handleButtonRow = (evt) => {
+  const row = evt.target.parentElement;
+  row.parentElement.appendChild(createBodyRow());
+
+  evt.target.innerText = "Remove row";
+  evt.target.removeEventListener("click", handleButtonRow);
+  evt.target.addEventListener("click", () => {
+    row.remove();
+  });
+};
+
+const serialiseData = () => {
+  const inputsArr = [...document.querySelectorAll(".requestBody input")];
+  const inputsVal = inputsArr.map((item) => item.value);
+
+  const data = {};
+
+  inputsVal.forEach((val, idx, arr) => {
+    if (idx % 2 === 0) {
+      data[val] = arr[idx + 1];
+    }
+  });
+
+  return JSON.stringify(data);
+};
+
+const createBodyRow = () => {
+  const rowTag = createHTMLTag({
+    tagClass: "requestBody",
+  });
+  const keyInputTag = createHTMLTag({ tagName: "input" });
+  const valueInputTag = createHTMLTag({ tagName: "input" });
+  const buttonTag = createHTMLTag({
+    tagName: "button",
+    tagText: "Add row",
+    tagID: "add",
+    tagEvent: {
+      type: "click",
+      cb: handleButtonRow,
+    },
+  });
+  rowTag.appendChild(keyInputTag);
+  rowTag.appendChild(valueInputTag);
+  rowTag.appendChild(buttonTag);
+
+  return rowTag;
 };
 
 export const createGUI = (supportedMethods) => {
@@ -88,12 +131,19 @@ export const createGUI = (supportedMethods) => {
       { key: "value", val: "http://localhost:3000/posts" },
     ],
   });
-  const textArea = createHTMLTag({
-    tagName: "textarea",
-    tagClass: "data",
-  });
+
+  //<input id="endpoint" type="text" value="http://localhost:3000/posts">
+
+  // const textArea = createHTMLTag({
+  //   tagName: "textarea",
+  //   tagClass: "data",
+  // });
+
+  //<textarea class="data"></textarea>
 
   const result = createHTMLTag({ tagName: "pre" });
+
+  //<pre></pre>
 
   const button = createHTMLTag({
     tagName: "button",
@@ -102,16 +152,20 @@ export const createGUI = (supportedMethods) => {
     tagEvent: {
       type: "click",
       cb: () => {
-        sendRequest(input.value, select.value, textArea, result);
+        sendRequest(input.value, select.value, serialiseData(), result);
       },
     },
   });
+
+  //<button id="send">send</button>
 
   const select = createHTMLTag({
     tagName: "select",
     tagID: "method",
     tagAttr: { key: "name", val: "methods" },
   });
+
+  // <select id="method" name="methods"></select>
   supportedMethods.forEach((m) => {
     const option = createHTMLTag({
       tagName: "option",
@@ -121,11 +175,14 @@ export const createGUI = (supportedMethods) => {
     select.appendChild(option);
   });
 
+  //<option value=get>GET</option>
+
   wrapper.appendChild(input);
   wrapper.appendChild(select);
   wrapper.appendChild(button);
-  wrapper.appendChild(textArea);
+  // wrapper.appendChild(textArea);
   wrapper.appendChild(result);
+  wrapper.appendChild(createBodyRow());
 
   return wrapper;
 };
